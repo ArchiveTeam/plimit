@@ -8,6 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"log"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -32,28 +33,43 @@ var statusCmd = &cobra.Command{
 
 		ctx, cancelGlobal := context.WithCancel(context.Background())
 
-		count, err := lockCount.Run(ctx, rdb, []string{}).Int()
+		w := viper.GetBool("watch")
 
-		if err != nil {
-			log.Fatalf("Failed to fetch data: %e\n", err)
-		}
+		for {
 
-		limit, err := rdb.Get(ctx, "limiter:limit").Int()
-		if err != nil {
-			if err == redis.Nil {
-				limit = 0
-			} else {
+			limit, err := rdb.Get(ctx, "limiter:limit").Int()
+			if err != nil {
+				if err == redis.Nil {
+					limit = 0
+				} else {
+					log.Fatalf("Failed to fetch data: %e\n", err)
+				}
+			}
+
+			count, err := lockCount.Run(ctx, rdb, []string{}).Int()
+
+			if err != nil {
 				log.Fatalf("Failed to fetch data: %e\n", err)
 			}
-		}
 
-		log.Printf("Active locks: %d / %d", count, limit)
+			log.Printf("Active locks: %d / %d", count, limit)
+
+			if !w {
+				break
+			}
+
+			time.Sleep(1 * time.Second)
+		}
 
 		cancelGlobal()
 	},
 }
 
 func init() {
+	flags := statusCmd.Flags()
+	flags.BoolP("watch", "w", false, "Loop")
+	viper.BindPFlag("watch", flags.Lookup("watch"))
+
 	rootCmd.AddCommand(statusCmd)
 
 	// Here you will define your flags and configuration settings.
