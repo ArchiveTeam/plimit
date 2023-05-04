@@ -40,7 +40,7 @@ end
 var lockCmd = &cobra.Command{
 	Use:   "lock",
 	Short: "Run a command with a connection lock",
-	Long:  `AAAA`,
+	Long:  `Run a command with a connection lock`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			log.Fatalln("Command missing!")
