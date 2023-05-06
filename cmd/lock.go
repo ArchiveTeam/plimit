@@ -30,7 +30,7 @@ var lockCmd = &cobra.Command{
 		ctx, cancelGlobal := context.WithCancel(context.Background())
 		id, err := uuid.NewUUID()
 		if err != nil {
-			log.Fatalln(err)
+			log.Panicln(err)
 		}
 
 		mgr := limitmgr.NewLimitManagerFromViper()
@@ -81,7 +81,7 @@ var lockCmd = &cobra.Command{
 		wrappedCmd.Stderr = os.Stderr
 		err = wrappedCmd.Run()
 		if err != nil {
-			log.Fatalf("Failed to execute wrapped command: %e\n", err)
+			log.Panicf("Failed to execute wrapped command: %e\n", err)
 		}
 
 		log.Println("Command run complete!")

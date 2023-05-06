@@ -58,7 +58,7 @@ func (l *LimitManager) ReleaseLock(ctx context.Context, id uuid.UUID) {
 	log.Printf("Attempting to release lock %s...\n", id.String())
 	err := l.rdb.ZRem(ctx, l.connectionsKey, id.String()).Err()
 	if err != nil {
-		log.Fatalf("Failed to release lock %s: %s\n", id.String(), err)
+		log.Panicf("Failed to release lock %s: %s\n", id.String(), err)
 	}
 	log.Printf("Released lock %s.\n", id.String())
 }

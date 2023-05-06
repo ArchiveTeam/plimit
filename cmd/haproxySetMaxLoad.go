@@ -5,46 +5,47 @@ package cmd
 
 import (
 	"context"
-	"github.com/spf13/cobra"
 	"log"
 	"plimit/pkg/limitmgr"
 	"strconv"
+
+	"github.com/spf13/cobra"
 )
 
-// setLimitCmd represents the setLimit command
-var setLimitCmd = &cobra.Command{
-	Use:        "set-limit [flags] new-limit",
-	Short:      "Set the limit",
-	Long:       `Set the limit`,
+// setMaxLoadCmd represents the setMaxLoad command
+var setMaxLoadCmd = &cobra.Command{
+	Use:        "set-max-load [flags] new-max-load",
+	Short:      "Set the new maximum load we will permit on haproxy in percentage.",
+	Long:       `Set the new maximum load we will permit on haproxy in percentage.`,
 	Args:       cobra.MinimumNArgs(1),
-	ArgAliases: []string{"new-limit"},
+	ArgAliases: []string{"new-max-load"},
 	Run: func(cmd *cobra.Command, args []string) {
 		newLimit, err := strconv.Atoi(args[0])
 
 		if err != nil {
-			log.Panicf("Failed to parse new limit: %e\n", err)
+			log.Panicf("Failed to parse new max-load: %e\n", err)
 		}
 
 		ctx, cancelGlobal := context.WithCancel(context.Background())
 
 		mgr := limitmgr.NewLimitManagerFromViper()
 
-		mgr.SetLimit(ctx, int64(newLimit))
+		mgr.SetAutoscaleMaxLoad(ctx, newLimit)
 
 		cancelGlobal()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(setLimitCmd)
+	haproxyCmd.AddCommand(setMaxLoadCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// setLimitCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// setMaxLoadCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// setLimitCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// setMaxLoadCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

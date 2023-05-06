@@ -11,11 +11,11 @@ import (
 	"strconv"
 )
 
-// setLimitCmd represents the setLimit command
-var setLimitCmd = &cobra.Command{
-	Use:        "set-limit [flags] new-limit",
-	Short:      "Set the limit",
-	Long:       `Set the limit`,
+// setHardLimitCmd represents the setHardLimit command
+var setHardLimitCmd = &cobra.Command{
+	Use:        "set-hard-limit [flags] new-limit",
+	Short:      "Set the hard limit beyond which the autoscaler will not go",
+	Long:       `Set the hard limit beyond which the autoscaler will not go`,
 	Args:       cobra.MinimumNArgs(1),
 	ArgAliases: []string{"new-limit"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -29,22 +29,22 @@ var setLimitCmd = &cobra.Command{
 
 		mgr := limitmgr.NewLimitManagerFromViper()
 
-		mgr.SetLimit(ctx, int64(newLimit))
+		mgr.SetAutoscaleHardLimit(ctx, int64(newLimit))
 
 		cancelGlobal()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(setLimitCmd)
+	haproxyCmd.AddCommand(setHardLimitCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// setLimitCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// setHardLimitCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// setLimitCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// setHardLimitCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

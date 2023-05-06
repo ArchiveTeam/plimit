@@ -6,6 +6,7 @@ package cmd
 import (
 	"github.com/spf13/viper"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -14,7 +15,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "plimit",
 	Short: "Limits parallelism.",
-	Long:  `AAAA`,
+	Long:  `Tool to limit parallel uploads.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -30,7 +31,10 @@ func Execute() {
 }
 
 func init() {
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv()
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -40,7 +44,6 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	flags := rootCmd.PersistentFlags()
-	var redisConnString string
-	flags.StringVar(&redisConnString, "redis_url", "", "Redis Conn String")
-	viper.BindPFlag("redis_url", flags.Lookup("redis_url"))
+	flags.String("redis-url", "", "Redis connection string (can also be set using the REDIS_URL env variable)")
+	viper.BindPFlag("redis-url", flags.Lookup("redis-url"))
 }

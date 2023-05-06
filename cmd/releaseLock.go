@@ -21,7 +21,7 @@ var releaseLockCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		id, err := uuid.Parse(args[0])
 		if err != nil {
-			log.Fatalf("Failed to parse uuid: %s\n", id)
+			log.Panicf("Failed to parse uuid: %s\n", id)
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())

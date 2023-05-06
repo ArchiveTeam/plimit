@@ -7,27 +7,33 @@ import (
 )
 
 type LimitManager struct {
-	rdb            *redis.Client
-	connectionsKey string
-	limitKey       string
+	rdb                 *redis.Client
+	connectionsKey      string
+	limitKey            string
+	autoscaleLimitKey   string
+	autoscaleMaxLoadKey string
 }
 
 var defaultconnectionsKey = "limiter:connections"
 var defaultlimitKey = "limiter:limit"
+var defaultAutoscaleLimitKey = "limiter:autoscale:hardlimit"
+var defaultAutoscaleMaxLoadKey = "limiter:autoscale:maxload"
 
 func NewLimitManagerFromViper() *LimitManager {
-	redisConnString := viper.GetString("redis_url")
+	redisConnString := viper.GetString("redis-url")
 	opt, err := redis.ParseURL(redisConnString)
 	if err != nil {
-		log.Fatalf("Failed to parse REDIS_URL: %e\n", err)
+		log.Panicf("Failed to parse REDIS_URL: %e\n", err)
 	}
 
 	rdb := redis.NewClient(opt)
 
 	return &LimitManager{
-		rdb:            rdb,
-		connectionsKey: defaultconnectionsKey,
-		limitKey:       defaultlimitKey,
+		rdb:                 rdb,
+		connectionsKey:      defaultconnectionsKey,
+		limitKey:            defaultlimitKey,
+		autoscaleLimitKey:   defaultAutoscaleLimitKey,
+		autoscaleMaxLoadKey: defaultAutoscaleMaxLoadKey,
 	}
 }
 
@@ -45,4 +51,20 @@ func (l *LimitManager) GetConnectionsKey() string {
 
 func (l *LimitManager) SetConnectionsKey(newKey string) {
 	l.connectionsKey = newKey
+}
+
+func (l *LimitManager) GetAutoscaleLimitKey() string {
+	return l.autoscaleLimitKey
+}
+
+func (l *LimitManager) SetAutoscaleLimitKey(newKey string) {
+	l.autoscaleLimitKey = newKey
+}
+
+func (l *LimitManager) GetAutoscaleMaxLoadKey() string {
+	return l.autoscaleMaxLoadKey
+}
+
+func (l *LimitManager) SetAutoscaleMaxLoadKey(newKey string) {
+	l.autoscaleMaxLoadKey = newKey
 }
