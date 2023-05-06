@@ -35,6 +35,7 @@ var (
 )
 
 func recordMetrics(ctx context.Context, mgr *limitmgr.LimitManager) {
+	mgr.CollectGarbage(ctx)
 	currentConnectionsGauge.Set(float64(mgr.GetCurrentConnectionCount(ctx)))
 	limitGauge.Set(float64(mgr.GetLimit(ctx)))
 	hardLimitGauge.Set(float64(mgr.GetAutoscaleHardLimit(ctx)))
