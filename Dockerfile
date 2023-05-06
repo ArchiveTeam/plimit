@@ -13,3 +13,4 @@ COPY --from=0 /plimit/plimit /plimit
 
 ENTRYPOINT ["/tini", "--", "/plimit"]
 CMD ["exporter"]
+
