@@ -81,6 +81,9 @@ func parseHAProxyStats(url string) *parsedHAProxy {
 
 func autoAdjustOnce(ctx context.Context, url string, mgr *limitmgr.LimitManager) {
 	log.Println("Doing autoadjustment...")
+
+	mgr.CollectGarbage(ctx)
+
 	log.Println("Fetching stats...")
 	stats := parseHAProxyStats(url)
 	log.Println("Fetched!")
