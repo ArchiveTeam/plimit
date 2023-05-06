@@ -111,16 +111,20 @@ func autoAdjustOnce(ctx context.Context, url string, mgr *limitmgr.LimitManager)
 
 // autoadjustCmd represents the autoadjust command
 var autoadjustCmd = &cobra.Command{
-	Use:        "autoadjust [flags] haproxy-url",
-	Short:      "Automatically adjust the limit based on haproxy.",
-	Long:       `Automatically adjust the limit based on haproxy.`,
-	Args:       cobra.MinimumNArgs(1),
-	ArgAliases: []string{"haproxy url"},
+	Use:   "autoadjust",
+	Short: "Automatically adjust the limit based on haproxy.",
+	Long:  `Automatically adjust the limit based on haproxy.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		url := viper.GetString("haproxy-url")
+
+		if url == "" {
+			log.Panicln("No haproxy url specified!")
+		}
+
 		ctx, cancel := context.WithCancel(context.Background())
 		mgr := limitmgr.NewLimitManagerFromViper()
 		for {
-			autoAdjustOnce(ctx, args[0], mgr)
+			autoAdjustOnce(ctx, url, mgr)
 
 			r := viper.GetInt("repeat")
 
@@ -139,6 +143,8 @@ func init() {
 	flags := autoadjustCmd.Flags()
 	flags.IntP("repeat", "r", 0, "Set to a non-zero value to repeat the adjustment every n seconds.")
 	viper.BindPFlag("repeat", flags.Lookup("repeat"))
+	flags.StringP("haproxy-url", "u", "", "Set a haproxy url to query. (Must end in ?stats;csv for correct operation.)")
+	viper.BindPFlag("haproxy-url", flags.Lookup("haproxy-url"))
 
 	haproxyCmd.AddCommand(autoadjustCmd)
 
