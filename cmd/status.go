@@ -5,17 +5,13 @@ package cmd
 
 import (
 	"context"
-	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"log"
+	"plimit/pkg/limitmgr"
 	"time"
 
 	"github.com/spf13/cobra"
 )
-
-var lockCount = redis.NewScript(`
-return #redis.pcall('keys', 'limiter:locks:*')
-`)
 
 // statusCmd represents the status command
 var statusCmd = &cobra.Command{
@@ -23,36 +19,18 @@ var statusCmd = &cobra.Command{
 	Short: "Displays statistics about the locks",
 	Long:  `Displays statistics about the locks`,
 	Run: func(cmd *cobra.Command, args []string) {
-		redisConnString := viper.GetString("redis_url")
-		opt, err := redis.ParseURL(redisConnString)
-		if err != nil {
-			log.Fatalf("Failed to parse REDIS_URL: %e\n", err)
-		}
-
-		rdb := redis.NewClient(opt)
-
 		ctx, cancelGlobal := context.WithCancel(context.Background())
+
+		mgr := limitmgr.NewLimitManagerFromViper()
 
 		w := viper.GetBool("watch")
 
 		for {
 
-			limit, err := rdb.Get(ctx, "limiter:limit").Int()
-			if err != nil {
-				if err == redis.Nil {
-					limit = 0
-				} else {
-					log.Fatalf("Failed to fetch data: %e\n", err)
-				}
-			}
+			limit := mgr.GetLimit(ctx)
+			active := mgr.GetCurrentConnectionCount(ctx)
 
-			count, err := lockCount.Run(ctx, rdb, []string{}).Int()
-
-			if err != nil {
-				log.Fatalf("Failed to fetch data: %e\n", err)
-			}
-
-			log.Printf("Active locks: %d / %d", count, limit)
+			log.Printf("Active locks: %v / %v", active, limit)
 
 			if !w {
 				break

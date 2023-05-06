@@ -5,67 +5,40 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"os/exec"
+	"plimit/pkg/limitmgr"
 	"time"
 )
 
 var errorDelay = 30 * time.Second
 var lockDelay = 2 * time.Second
 var refreshDelay = 60 * time.Second
-
-var acquireScript = redis.NewScript(`
-local key = KEYS[1]
-
-local limit = redis.call("GET", "limiter:limit")
-local num_locks = #redis.pcall('keys', 'limiter:locks:*')
-if limit == nil then
-	limit = 0
-end
-if num_locks < tonumber(limit) then
-	redis.call('SET', 'limiter:locks:'..key, key, 'EX', '3600')
-	return true
-else
-	return false
-end
-`)
+var lockDuration = time.Hour
 
 // lockCmd represents the lock command
 var lockCmd = &cobra.Command{
-	Use:   "lock",
+	Use:   "lock [flags] command...",
 	Short: "Run a command with a connection lock",
 	Long:  `Run a command with a connection lock`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			log.Fatalln("Command missing!")
-		}
-
-		redisConnString := viper.GetString("redis_url")
-		opt, err := redis.ParseURL(redisConnString)
-		if err != nil {
-			log.Fatalf("Failed to parse REDIS_URL: %e\n", err)
-		}
-
-		rdb := redis.NewClient(opt)
-
 		ctx, cancelGlobal := context.WithCancel(context.Background())
-
 		id, err := uuid.NewUUID()
-
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		var acquired bool
-		for !acquired {
-			log.Println("Attempting...")
-			acquired, err = acquireScript.Run(ctx, rdb, []string{id.String()}).Bool()
+		mgr := limitmgr.NewLimitManagerFromViper()
+
+		mgr.CollectGarbage(ctx)
+
+		for {
+			acquired, err := mgr.TryAcquireLock(ctx, id, lockDuration)
 
 			if err != nil && err != redis.Nil {
 				log.Printf("Error during acquire: %v\n", err)
@@ -74,14 +47,15 @@ var lockCmd = &cobra.Command{
 				if !acquired {
 					log.Println("No more locks available. Sleeping...")
 					time.Sleep(lockDelay)
+				} else {
+					break
 				}
 			}
 		}
 
 		defer func() {
 			cctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			log.Printf("Releasing lock %s...\n", id.String())
-			rdb.Del(cctx, fmt.Sprintf("limiter:locks:%s", id.String()))
+			mgr.ReleaseLock(cctx, id)
 			cancel()
 		}()
 
@@ -96,10 +70,7 @@ var lockCmd = &cobra.Command{
 					break
 				}
 
-				err := rdb.Expire(ctx, fmt.Sprintf("limiter:locks:%s", id.String()), 3600*time.Second).Err()
-				if err != nil {
-					log.Println("Refreshing lock failed: %v\n", err)
-				}
+				mgr.RefreshLock(ctx, id, lockDuration)
 			}
 		}()
 
