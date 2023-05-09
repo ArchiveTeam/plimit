@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"plimit/pkg/limitmgr"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -59,24 +60,26 @@ type parsedHAProxy struct {
 func parseHAProxyStats(url string) *parsedHAProxy {
 	data := readCSVFromUrl(url)
 
+	stats := &parsedHAProxy{
+		SessionsCurrent: 0,
+		SessionsLimit:   0,
+	}
+
 	for _, row := range data {
-		if row["# pxname"] == "s3" && row["svname"] == "BACKEND" {
+		if row["# pxname"] == "s3" && strings.HasPrefix(row["svname"], "www") {
 			slim, err := strconv.Atoi(row["slim"])
 			if err != nil {
-				log.Panicf("Unable to parse slim (%s) as number: %s", row["slim"], err)
+				log.Panicf("Unable to parse slim %s: %s", row["slim"], err)
 			}
 			scur, err := strconv.Atoi(row["scur"])
 			if err != nil {
-				log.Panicf("Unable to parse scur (%s) as number: %s", row["scur"], err)
+				log.Panicf("Unable to parse scur %s: %s", row["scur"], err)
 			}
-			return &parsedHAProxy{
-				SessionsLimit:   slim,
-				SessionsCurrent: scur,
-			}
+			stats.SessionsLimit += slim
+			stats.SessionsCurrent += scur
 		}
 	}
-	log.Panicf("Unable to find totals in haproxy!\n")
-	return nil
+	return stats
 }
 
 func autoAdjustOnce(ctx context.Context, url string, mgr *limitmgr.LimitManager) {
