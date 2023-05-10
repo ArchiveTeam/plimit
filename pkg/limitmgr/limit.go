@@ -95,9 +95,9 @@ func (l *LimitManager) GetAutoscaleMinLimit(ctx context.Context) int {
 }
 
 func (l *LimitManager) SetAutoscaleMinLimit(ctx context.Context, newLimit int64) {
-	log.Printf("Updating autoscale max load to %v.\n", newLimit)
+	log.Printf("Updating autoscale min limit to %v.\n", newLimit)
 	err := l.rdb.Set(ctx, l.autoscaleLowLimitKey, newLimit, 0).Err()
 	if err != nil {
-		log.Panicf("Failed to set autoscale max load: %e\n", err)
+		log.Panicf("Failed to set autoscale min limit: %e\n", err)
 	}
 }
