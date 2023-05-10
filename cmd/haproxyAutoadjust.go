@@ -103,8 +103,10 @@ func autoAdjustOnce(ctx context.Context, url string, mgr *limitmgr.LimitManager)
 
 	hardLimit := mgr.GetAutoscaleHardLimit(ctx)
 	log.Printf("Configured hard limit: %v\n", hardLimit)
+	minLimit := mgr.GetAutoscaleMinLimit(ctx)
+	log.Printf("Configured min limit: %v\n", minLimit)
 
-	connectionsAvailableForUs := mathutil.Clamp(allowedLimit-connectionsNotOurs, 0, hardLimit)
+	connectionsAvailableForUs := mathutil.Clamp(allowedLimit-connectionsNotOurs, minLimit, hardLimit)
 
 	log.Printf("We will set our limit to: %v\n", connectionsAvailableForUs)
 	mgr.SetLimit(ctx, int64(connectionsAvailableForUs))

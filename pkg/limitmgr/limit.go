@@ -80,3 +80,24 @@ func (l *LimitManager) SetAutoscaleMaxLoad(ctx context.Context, newLimit int) {
 		log.Panicf("Failed to set autoscale max load: %e\n", err)
 	}
 }
+
+func (l *LimitManager) GetAutoscaleMinLimit(ctx context.Context) int {
+	limit, err := l.rdb.Get(ctx, l.autoscaleLowLimitKey).Int()
+	if err != nil {
+		if err == redis.Nil {
+			limit = 0
+		} else {
+			log.Panicf("Failed to fetch data: %e\n", err)
+		}
+	}
+
+	return limit
+}
+
+func (l *LimitManager) SetAutoscaleMinLimit(ctx context.Context, newLimit int64) {
+	log.Printf("Updating autoscale max load to %v.\n", newLimit)
+	err := l.rdb.Set(ctx, l.autoscaleLowLimitKey, newLimit, 0).Err()
+	if err != nil {
+		log.Panicf("Failed to set autoscale max load: %e\n", err)
+	}
+}

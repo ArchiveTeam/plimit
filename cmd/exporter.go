@@ -18,7 +18,7 @@ import (
 var (
 	currentConnectionsGauge = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "plimit_current_connections",
-		Help: "Number of currently available connections",
+		Help: "Number of currently used connections",
 	})
 	limitGauge = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "plimit_current_limit",
@@ -27,6 +27,10 @@ var (
 	hardLimitGauge = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "plimit_haproxy_hard_limit",
 		Help: "Currently configured hard limit for the haproxy autoscaler",
+	})
+	minLimitGauge = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "plimit_haproxy_min_limit",
+		Help: "Currently configured minimum limit for the haproxy autoscaler",
 	})
 	maxLoadGauge = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "plimit_haproxy_max_load",
@@ -40,6 +44,7 @@ func recordMetrics(ctx context.Context, mgr *limitmgr.LimitManager) {
 	limitGauge.Set(float64(mgr.GetLimit(ctx)))
 	hardLimitGauge.Set(float64(mgr.GetAutoscaleHardLimit(ctx)))
 	maxLoadGauge.Set(float64(mgr.GetAutoscaleMaxLoad(ctx)))
+	minLimitGauge.Set(float64(mgr.GetAutoscaleMinLimit(ctx)))
 }
 
 // exporterCmd represents the exporter command

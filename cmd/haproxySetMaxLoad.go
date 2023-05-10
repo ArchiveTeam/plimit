@@ -14,7 +14,7 @@ import (
 
 // setMaxLoadCmd represents the setMaxLoad command
 var setMaxLoadCmd = &cobra.Command{
-	Use:        "set-max-load [flags] new-max-load",
+	Use:        "set-max-load [flags] <new-max-load>",
 	Short:      "Set the new maximum load we will permit on haproxy in percentage.",
 	Long:       `Set the new maximum load we will permit on haproxy in percentage.`,
 	Args:       cobra.MinimumNArgs(1),

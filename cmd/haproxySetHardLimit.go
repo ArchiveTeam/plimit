@@ -13,7 +13,7 @@ import (
 
 // setHardLimitCmd represents the setHardLimit command
 var setHardLimitCmd = &cobra.Command{
-	Use:        "set-hard-limit [flags] new-limit",
+	Use:        "set-hard-limit [flags] <new-limit>",
 	Short:      "Set the hard limit beyond which the autoscaler will not go",
 	Long:       `Set the hard limit beyond which the autoscaler will not go`,
 	Args:       cobra.MinimumNArgs(1),
