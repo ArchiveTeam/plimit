@@ -3,7 +3,7 @@ WORKDIR /plimit/
 COPY . .
 RUN make
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
