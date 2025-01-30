@@ -1,4 +1,4 @@
-FROM golang:1.20.4-buster
+FROM golang:1.23.5-bookworm
 WORKDIR /plimit/
 COPY . .
 RUN make
